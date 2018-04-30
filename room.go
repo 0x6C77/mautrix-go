@@ -125,6 +125,28 @@ func (r *Room) SendfHTML(message string, args ...interface{}) (SendResponse, err
 	return r.SendHTML(fmt.Sprintf(message, args...))
 }
 
+// Send emote message to this room
+func (r *Room) Emote(message string) (SendResponse, error) {
+	creq := r.Session.NewJSONRequest(
+		map[string]string{
+			"msgtype": MsgEmote,
+			"body":    message,
+		},
+		"/rooms/%s/send/%s/%d?access_token=%s",
+		r.ID, EvtRoomMessage, r.Session.NextTransactionID(), r.Session.AccessToken,
+	).PUT()
+	if !creq.OK() {
+		return SendResponse{}, creq.Error
+	}
+
+	var data SendResponse
+	err := creq.JSON(&data)
+	if err != nil {
+		return SendResponse{}, err
+	}
+	return data, nil
+}
+
 // Join a room
 func (mx *MatrixBot) Join(roomID string) error {
 	creq := mx.NewPlainRequest(
